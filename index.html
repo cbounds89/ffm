@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fitness Calculator</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+
+<style>
+body {
+    font-family: -apple-system, sans-serif;
+    background: #0f172a;
+    color: white;
+    margin: 0;
+    padding: 16px;
+}
+.container { max-width: 420px; margin: auto; }
+.card {
+    background: #1e293b;
+    padding: 16px;
+    border-radius: 16px;
+    margin-bottom: 16px;
+}
+input, select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    margin-top: 6px;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+h1 { text-align: center; font-size: 22px; }
+label { font-size: 13px; }
+.slider { width: 100%; }
+
+.bar {
+    height: 10px;
+    border-radius: 10px;
+    margin-top: 6px;
+    background: #334155;
+    overflow: hidden;
+}
+.fill { height: 100%; }
+.protein { background: #22c55e; }
+.carbs { background: #3b82f6; }
+.fats { background: #f59e0b; }
+
+.result { font-size: 14px; line-height: 1.6; }
+</style>
+</head>
+
+<body>
+<div class="container">
+<h1>Fitness Calculator</h1>
+
+<div class="card">
+<label>Units</label>
+<select id="units" onchange="calc()">
+<option value="kg">kg / cm</option>
+<option value="lbs">lbs / inches</option>
+</select>
+
+<label>Weight</label>
+<input id="weight" type="number" oninput="calc()">
+
+<label>Body Fat %</label>
+<input id="bf" type="number" oninput="calc()">
+
+<label>Height</label>
+<input id="height" type="number" oninput="calc()">
+
+<label>Age</label>
+<input id="age" type="number" oninput="calc()">
+
+<label>Sex</label>
+<select id="sex" onchange="calc()">
+<option value="male">Male</option>
+<option value="female">Female</option>
+</select>
+
+<label>Activity</label>
+<select id="activity" onchange="calc()">
+<option value="1.2">Sedentary</option>
+<option value="1.375">Light</option>
+<option value="1.55">Moderate</option>
+<option value="1.725">High</option>
+</select>
+
+<label>Goal</label>
+<select id="goal" onchange="calc()">
+<option value="cut">Cut (-20%)</option>
+<option value="maintain">Maintain</option>
+<option value="bulk">Bulk (+15%)</option>
+</select>
+</div>
+
+<div class="card">
+<label>Protein %</label>
+<input type="range" min="10" max="50" value="30" id="p" class="slider" oninput="calc()">
+
+<label>Carbs %</label>
+<input type="range" min="10" max="60" value="40" id="c" class="slider" oninput="calc()">
+
+<label>Fats %</label>
+<input type="range" min="10" max="40" value="30" id="f" class="slider" oninput="calc()">
+</div>
+
+<div class="card result" id="out"></div>
+
+<div class="card">
+<div>Macro Split</div>
+<div class="bar"><div id="pbar" class="fill protein"></div></div>
+<div class="bar"><div id="cbar" class="fill carbs"></div></div>
+<div class="bar"><div id="fbar" class="fill fats"></div></div>
+</div>
+
+</div>
+
+<script>
+function calc() {
+let w = parseFloat(document.getElementById("weight").value);
+let bf = parseFloat(document.getElementById("bf").value);
+let h = parseFloat(document.getElementById("height").value);
+let age = parseFloat(document.getElementById("age").value);
+let sex = document.getElementById("sex").value;
+let act = parseFloat(document.getElementById("activity").value);
+let goal = document.getElementById("goal").value;
+
+let p = parseInt(document.getElementById("p").value);
+let c = parseInt(document.getElementById("c").value);
+let f = parseInt(document.getElementById("f").value);
+
+if (!w || !bf || !h || !age) return;
+
+if (document.getElementById("units").value === "lbs") {
+    w *= 0.4536;
+    h *= 2.54;
+}
+
+let ffm = w * (1 - bf/100);
+
+let bmr = (sex==="male") 
+? 10*w + 6.25*h - 5*age + 5 
+: 10*w + 6.25*h - 5*age - 161;
+
+let cal = bmr * act;
+
+if (goal==="cut") cal *= 0.8;
+if (goal==="bulk") cal *= 1.15;
+
+let total = p + c + f;
+p /= total;
+c /= total;
+f /= total;
+
+let protein = (cal * p) / 4;
+let carbs = (cal * c) / 4;
+let fats = (cal * f) / 9;
+
+document.getElementById("out").innerHTML = `
+<b>Fat-Free Mass:</b> ${ffm.toFixed(1)} kg<br>
+<b>Calories:</b> ${cal.toFixed(0)} kcal<br><br>
+<b>Protein:</b> ${protein.toFixed(0)} g<br>
+<b>Carbs:</b> ${carbs.toFixed(0)} g<br>
+<b>Fats:</b> ${fats.toFixed(0)} g
+`;
+
+document.getElementById("pbar").style.width = (p*100) + "%";
+document.getElementById("cbar").style.width = (c*100) + "%";
+document.getElementById("fbar").style.width = (f*100) + "%";
+}
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+}
+</script>
+
+</body>
+</html>
